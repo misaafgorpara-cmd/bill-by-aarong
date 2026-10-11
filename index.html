@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Report Processing Portal</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1 0 auto;
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        .upload-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .upload-box {
+            border: 2px dashed #cbd5e1;
+            border-radius: 0.5rem;
+            padding: 1.75rem 1rem;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .upload-box:hover,
+        .upload-box.dragover {
+            border-color: #0d6efd;
+            background: #f0f7ff;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            color: #0d6efd;
+            margin-bottom: 0.5rem;
+        }
+
+        .table-wrapper {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .clean-table {
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+
+        .clean-table thead th {
+            position: sticky;
+            top: 0;
+            background: #0f172a;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            z-index: 10;
+        }
+
+        .num-col {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .text-cell {
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        .badge-finish {
+            background: #e6fcf5;
+            color: #0ca678;
+            border: 1px solid #c3fae8;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .badge-semi {
+            background: #f3f0ff;
+            color: #7950f2;
+            border: 1px solid #e5dbff;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Minimal Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3 mb-4 sticky-top shadow-lg">
+        <div class="container px-4">
+            <span class="navbar-brand d-flex align-items-center gap-2 mb-0 h1 fs-5">
+                Report Processing Portal : <i class="text-warning">Bill by Aarong</i>
+            </span>
+            <span class="text-white small">Finish &amp; Semi Finish Combiner</span>
+        </div>
+    </nav>
+
+    <main class="container px-4">
+
+        <!-- Upload Section -->
+        <div class="row g-3 mb-3">
+
+            <!-- SS-1: Finish Order -->
+            <div class="col-md-6">
+                <div class="upload-card p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold mb-0 text-dark">
+                            Finish Order Report
+                        </h6>
+                        <small id="finishStatus" class="text-muted">No file selected</small>
+                    </div>
+                    <div id="finishDropzone" class="upload-box">
+                        <input type="file" id="finishFileInput" class="d-none" accept=".xlsx,.xls">
+                        <i class="bi bi-cloud-arrow-up upload-icon d-block"></i>
+                        <div class="fw-semibold text-secondary small">Click to browse or drop Finish Report (.xlsx,
+                            .xls)</div>
+                    </div>
+                    <div id="finishFileInfo"
+                        class="d-none mt-2 alert alert-light border py-1 px-2 d-flex justify-content-between align-items-center mb-0">
+                        <span id="finishFileName" class="text-truncate small fw-semibold">file.xlsx</span>
+                        <button class="btn btn-sm btn-link text-danger p-0" onclick="removeFile('finish')"
+                            title="Remove">&times;</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SS-2: Semi Finish Order -->
+            <div class="col-md-6">
+                <div class="upload-card p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold mb-0 text-dark">
+                            Semi Finish Order Report
+                        </h6>
+                        <small id="semiStatus" class="text-muted">No file selected</small>
+                    </div>
+                    <div id="semiDropzone" class="upload-box">
+                        <input type="file" id="semiFileInput" class="d-none" accept=".xlsx,.xls">
+                        <i class="bi bi-cloud-arrow-up upload-icon d-block text-primary"></i>
+                        <div class="fw-semibold text-secondary small">Click to browse or drop Semi Finish Report (.xlsx,
+                            .xls)</div>
+                    </div>
+                    <div id="semiFileInfo"
+                        class="d-none mt-2 alert alert-light border py-1 px-2 d-flex justify-content-between align-items-center mb-0">
+                        <span id="semiFileName" class="text-truncate small fw-semibold">file.xlsx</span>
+                        <button class="btn btn-sm btn-link text-danger p-0" onclick="removeFile('semi')"
+                            title="Remove">&times;</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Actions Toolbar -->
+        <div class="text-center my-4">
+            <div class="d-inline-flex justify-content-center align-items-center gap-2 flex-wrap">
+                <button id="btnFillReport" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm">
+                    Generate Report
+                </button>
+                <button id="btnReset" class="btn btn-outline-secondary px-4 py-2 fw-semibold d-none">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                </button>
+            </div>
+            <div id="alertMsg" class="small text-muted mt-2"></div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="card border-0 shadow-sm d-none mb-5">
+            <div
+                class="card-header bg-white py-3 px-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    <h6 class="fw-bold mb-0 text-dark">Combined Order Report</h6>
+                    <span id="recordCountBadge" class="badge bg-secondary-subtle text-secondary">0 orders</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="text" id="searchInput" class="form-control form-control-sm"
+                        placeholder="Search orders..." style="width: 200px;">
+                    <select id="filterType" class="form-select form-select-sm" style="width: 140px;">
+                        <option value="ALL">All Types</option>
+                        <option value="Finish">Finish</option>
+                        <option value="Semi Finish">Semi Finish</option>
+                    </select>
+                    <button id="btnExport" class="btn btn-success btn-sm px-3 fw-semibold">
+                        <i class="bi bi-download me-1"></i>Download Excel (.xlsx)
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive table-wrapper">
+                    <table class="table table-hover table-striped clean-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Order Number</th>
+                                <th>Order Date</th>
+                                <th>Product</th>
+                                <th>Purpose</th>
+                                <th>Delivery Date</th>
+                                <th>Product Description</th>
+                                <th class="num-col">Quantity</th>
+                                <th class="num-col">Amount</th>
+                                <th class="num-col">Challan Qty</th>
+                                <th class="num-col">Challan Amount</th>
+                                <th class="num-col">Bill Qty</th>
+                                <th class="num-col">Bill Amount</th>
+                                <th class="num-col">Balance Qty</th>
+                                <th class="num-col">Balance Amount</th>
+                                <th class="text-center">Order type</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                        <tfoot id="tableFoot" class="table-light fw-bold"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-top bg-white py-3 mt-auto shadow-sm">
+        <div class="container text-center">
+            <div class="text-muted small">
+                Designed and Developed by <b>Md Bashir Ahmed</b>, MIS, AAF Gorpara.
+            </div>
+            <div class="text-muted small mt-1">
+                © 2026 Ayesha Abed Foundation - Gorpara. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- SheetJS CDN (Reads & Exports Excel directly in browser) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <script>
+        let finishFile = null;
+        let semiFinishFile = null;
+        let combinedRecords = [];
+        let filteredRecords = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupUploads();
+            setupActions();
+        });
+
+        function setupUploads() {
+            const finishDropzone = document.getElementById('finishDropzone');
+            const finishInput = document.getElementById('finishFileInput');
+            const semiDropzone = document.getElementById('semiDropzone');
+            const semiInput = document.getElementById('semiFileInput');
+
+            finishDropzone.addEventListener('click', () => finishInput.click());
+            finishInput.addEventListener('change', (e) => onFileSelected(e.target.files[0], 'finish'));
+            bindDragEvents(finishDropzone, (file) => onFileSelected(file, 'finish'));
+
+            semiDropzone.addEventListener('click', () => semiInput.click());
+            semiInput.addEventListener('change', (e) => onFileSelected(e.target.files[0], 'semi'));
+            bindDragEvents(semiDropzone, (file) => onFileSelected(file, 'semi'));
+        }
+
+        function bindDragEvents(zone, onDrop) {
+            ['dragenter', 'dragover'].forEach(n => zone.addEventListener(n, (e) => { e.preventDefault(); zone.classList.add('dragover'); }));
+            ['dragleave', 'drop'].forEach(n => zone.addEventListener(n, (e) => { e.preventDefault(); zone.classList.remove('dragover'); }));
+            zone.addEventListener('drop', (e) => {
+                if (e.dataTransfer.files.length) onDrop(e.dataTransfer.files[0]);
+            });
+        }
+
+        function onFileSelected(file, type) {
+            if (!file) return;
+            if (type === 'finish') {
+                finishFile = file;
+                document.getElementById('finishFileName').innerText = file.name;
+                document.getElementById('finishFileInfo').classList.remove('d-none');
+                document.getElementById('finishStatus').innerText = 'Ready';
+                document.getElementById('finishStatus').className = 'text-success fw-semibold';
+            } else {
+                semiFinishFile = file;
+                document.getElementById('semiFileName').innerText = file.name;
+                document.getElementById('semiFileInfo').classList.remove('d-none');
+                document.getElementById('semiStatus').innerText = 'Ready';
+                document.getElementById('semiStatus').className = 'text-success fw-semibold';
+            }
+            setMsg('');
+        }
+
+        function removeFile(type) {
+            if (type === 'finish') {
+                finishFile = null;
+                document.getElementById('finishFileInput').value = '';
+                document.getElementById('finishFileInfo').classList.add('d-none');
+                document.getElementById('finishStatus').innerText = 'No file selected';
+                document.getElementById('finishStatus').className = 'text-muted';
+            } else {
+                semiFinishFile = null;
+                document.getElementById('semiFileInput').value = '';
+                document.getElementById('semiFileInfo').classList.add('d-none');
+                document.getElementById('semiStatus').innerText = 'No file selected';
+                document.getElementById('semiStatus').className = 'text-muted';
+            }
+        }
+
+        function setupActions() {
+            document.getElementById('btnFillReport').addEventListener('click', processReports);
+            document.getElementById('btnReset').addEventListener('click', resetAll);
+            document.getElementById('btnExport').addEventListener('click', exportToExcel);
+
+            document.getElementById('searchInput').addEventListener('input', applyFilters);
+            document.getElementById('filterType').addEventListener('change', applyFilters);
+        }
+
+        function readFileRows(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const wb = XLSX.read(data, { type: 'array' });
+                        const sheet = wb.Sheets[wb.SheetNames[0]];
+                        // raw: false ensures cells retain their formatted text if available
+                        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+                        resolve(rows);
+                    } catch (err) { reject(err); }
+                };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        /**
+         * Converts any date (Excel serial number float/int, Date object, or text)
+         * strictly into DD/MM/YYYY format (e.g. 27/11/2026).
+         */
+        function formatDateToDDMMYYYY(val) {
+            if (val === null || val === undefined || val === '') return '';
+
+            // If already a JavaScript Date object
+            if (val instanceof Date && !isNaN(val)) {
+                const d = String(val.getDate()).padStart(2, '0');
+                const m = String(val.getMonth() + 1).padStart(2, '0');
+                const y = val.getFullYear();
+                return `${d}/${m}/${y}`;
+            }
+
+            let str = String(val).trim();
+            if (!str || str.toLowerCase() === 'n/a') return 'N/A';
+
+            // 1. Detect Excel Serial Date (integer or float e.g. 45862.65105324074 or 45957)
+            // Excel epoch starts Dec 30, 1899 (Lotus offset = 25569)
+            const num = parseFloat(str);
+            if (!isNaN(num) && num > 10000 && num < 100000 && /^\d+(\.\d+)?$/.test(str)) {
+                const wholeDays = Math.floor(num);
+                const utcDays = wholeDays - 25569;
+                const date = new Date(utcDays * 86400 * 1000);
+                if (!isNaN(date.getTime())) {
+                    const d = String(date.getUTCDate()).padStart(2, '0');
+                    const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+                    const y = date.getUTCFullYear();
+                    return `${d}/${m}/${y}`;
+                }
+            }
+
+            // 2. Format: DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
+            const dmy = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+            if (dmy) {
+                const d = dmy[1].padStart(2, '0');
+                const m = dmy[2].padStart(2, '0');
+                let y = dmy[3];
+                if (y.length === 2) {
+                    y = (parseInt(y, 10) > 50 ? '19' : '20') + y;
+                }
+                return `${d}/${m}/${y}`;
+            }
+
+            // 3. Format: YYYY-MM-DD or YYYY/MM/DD
+            const ymd = str.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/);
+            if (ymd) {
+                const y = ymd[1];
+                const m = ymd[2].padStart(2, '0');
+                const d = ymd[3].padStart(2, '0');
+                return `${d}/${m}/${y}`;
+            }
+
+            // 4. Fallback Date.parse
+            const parsed = Date.parse(str);
+            if (!isNaN(parsed)) {
+                const date = new Date(parsed);
+                const d = String(date.getDate()).padStart(2, '0');
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const y = date.getFullYear();
+                return `${d}/${m}/${y}`;
+            }
+
+            return str;
+        }
+
+        /**
+         * Aggregates various sizes in any specific order into a single row:
+         * - Keeps product description from the first row
+         * - Sums Quantity, Amount, Challan Qty, Challan Amount, Bill Qty, Bill Amount, Balance Qty, Balance Amount
+         */
+        function aggregateOrderSizes(records) {
+            const orderMap = new Map();
+
+            for (const r of records) {
+                // Unique key: Order Number + Order Type
+                const key = `${r["Order Number"]}___${r["Order type"]}`;
+
+                if (!orderMap.has(key)) {
+                    // Initialize with first row's description and metadata
+                    orderMap.set(key, {
+                        "Order Number": String(r["Order Number"] || "N/A"),
+                        "Order Date": formatDateToDDMMYYYY(r["Order Date"]),
+                        "Product": r["Product"] || "N/A",
+                        "Purpose": r["Purpose"] || "N/A",
+                        "Delivery Date": formatDateToDDMMYYYY(r["Delivery Date"]),
+                        "Product Description": r["Product Description"] || "N/A", // Keep from first one
+                        "Quantity": 0,
+                        "Amount": 0,
+                        "Challan Qty": 0,
+                        "Challan Amount": 0,
+                        "Bill Qty": 0,
+                        "Bill Amount": 0,
+                        "Balance Qty": 0,
+                        "Balance Amount": 0,
+                        "Order type": r["Order type"]
+                    });
+                }
+
+                const current = orderMap.get(key);
+                current["Quantity"] += Number(r["Quantity"] || 0);
+                current["Amount"] += Number(r["Amount"] || 0);
+                current["Challan Qty"] += Number(r["Challan Qty"] || 0);
+                current["Challan Amount"] += Number(r["Challan Amount"] || 0);
+                current["Bill Qty"] += Number(r["Bill Qty"] || 0);
+                current["Bill Amount"] += Number(r["Bill Amount"] || 0);
+                current["Balance Qty"] += Number(r["Balance Qty"] || 0);
+                current["Balance Amount"] += Number(r["Balance Amount"] || 0);
+            }
+
+            // Round sums to 2 decimal places
+            return Array.from(orderMap.values()).map(item => {
+                const metricKeys = ["Quantity", "Amount", "Challan Qty", "Challan Amount", "Bill Qty", "Bill Amount", "Balance Qty", "Balance Amount"];
+                metricKeys.forEach(k => {
+                    item[k] = Math.round((Number(item[k]) || 0) * 100) / 100;
+                });
+                return item;
+            });
+        }
+
+        function parseReport(rawRows, defaultType) {
+            let purpose = '', type = defaultType, line = '', orderNo = '', orderDate = '', deliveryDate = '';
+            const rawRecords = [];
+
+            for (let r = 0; r < rawRows.length; r++) {
+                const row = rawRows[r];
+                if (!row || !Array.isArray(row)) continue;
+
+                const cells = row.map(c => (c !== null && c !== undefined ? String(c).trim() : ''));
+                const rowText = cells.filter(Boolean).join(' ');
+                if (!rowText) continue;
+
+                // Skip subtotal and summary lines
+                if (/\b(Order\s*No\s*Total|Line\s*Total|Purpose\s*Total|Grand\s*Total|Report\s*Total|Total\s*:)\b/i.test(rowText)) continue;
+                if (/\b(Aarong Production Center|Purpose Wise Billing|Details|APC GORPARA|From Date|To Date)\b/i.test(rowText)) continue;
+                if (/Product\s*Code/i.test(rowText) && /Product\s*Description/i.test(rowText)) continue;
+                if (/\bQuantity\s+Amount\b/i.test(rowText)) continue;
+
+                // Extract Purpose & Type
+                const purpMatch = rowText.match(/Purpose\s*[:\-]?\s*([^|\n\r]+?)(?=\s+(?:Type|Line|Order|$))/i);
+                if (purpMatch) {
+                    purpose = purpMatch[1].trim();
+                    const tMatch = rowText.match(/Type\s*[:\-]?\s*([A-Za-z\s]+)$/i);
+                    if (tMatch) {
+                        const val = tMatch[1].trim();
+                        if (/semi/i.test(val)) type = 'Semi Finish';
+                        else if (/finish/i.test(val)) type = 'Finish';
+                    }
+                    continue;
+                }
+
+                // Extract Line (Product)
+                const lineMatch = rowText.match(/Line\s*[:\-]?\s*([^|\n\r]+)/i);
+                if (lineMatch) {
+                    line = lineMatch[1].trim();
+                    continue;
+                }
+
+                // Extract Order No, Order Date, Delivery Date
+                if (/Order\s*No/i.test(rowText)) {
+                    // Keep Order Number in strict text format (preserve leading zeros e.g. 072505780092)
+                    const oMatch = rowText.match(/Order\s*No\.?\s*[:\-]?\s*([0-9A-Za-z]+)/i);
+                    if (oMatch) orderNo = String(oMatch[1]).trim();
+
+                    const odMatch = rowText.match(/Order\s*Date\s*[:\-]?\s*([0-9\/\-\.]+)/i);
+                    if (odMatch) orderDate = formatDateToDDMMYYYY(odMatch[1]);
+
+                    const ddMatch = rowText.match(/Delivery\s*Date\s*[:\-]?\s*([0-9\/\-\.]+)/i);
+                    if (ddMatch) deliveryDate = formatDateToDDMMYYYY(ddMatch[1]);
+
+                    // Fallback: Cell-by-cell inspection for separate adjacent cells
+                    for (let c = 0; c < cells.length; c++) {
+                        const cellVal = cells[c];
+                        if (/Order\s*No/i.test(cellVal) && !orderNo) {
+                            for (let n = c + 1; n < cells.length && n <= c + 3; n++) {
+                                if (cells[n]) {
+                                    const m = cells[n].match(/^[:\-]?\s*([0-9A-Za-z]+)/);
+                                    if (m) { orderNo = String(m[1]).trim(); break; }
+                                }
+                            }
+                        }
+                        if (/Order\s*Date/i.test(cellVal) && (!orderDate || orderDate === 'N/A')) {
+                            for (let n = c + 1; n < cells.length && n <= c + 3; n++) {
+                                if (cells[n]) {
+                                    const clean = cells[n].replace(/^[:\-]\s*/, '').trim();
+                                    if (/^[0-9\/\-\.]+$/.test(clean)) { orderDate = formatDateToDDMMYYYY(clean); break; }
+                                }
+                            }
+                        }
+                        if (/Delivery\s*Date/i.test(cellVal) && (!deliveryDate || deliveryDate === 'N/A')) {
+                            for (let n = c + 1; n < cells.length && n <= c + 3; n++) {
+                                if (cells[n]) {
+                                    const clean = cells[n].replace(/^[:\-]\s*/, '').trim();
+                                    if (/^[0-9\/\-\.]+$/.test(clean)) { deliveryDate = formatDateToDDMMYYYY(clean); break; }
+                                }
+                            }
+                        }
+                    }
+                    continue;
+                }
+
+                // Identify item data row
+                const nonBlank = [];
+                cells.forEach((val, idx) => { if (val !== '') nonBlank.push({ idx, val }); });
+                if (nonBlank.length < 3) continue;
+
+                const prodCode = nonBlank[0].val;
+                const prodDesc = nonBlank.length > 1 ? nonBlank[1].val : '';
+
+                // Extract numeric columns
+                const nums = [];
+                nonBlank.forEach(item => {
+                    const clean = item.val.replace(/,/g, '').replace(/\$/g, '').trim();
+                    const n = parseFloat(clean);
+                    if (!isNaN(n) && /^-?\d+(\.\d+)?$/.test(clean)) nums.push(n);
+                });
+
+                if (nums.length >= 4) {
+                    let q = 0, amt = 0, cQ = 0, cAmt = 0, bQ = 0, bAmt = 0, balQ = 0, balAmt = 0;
+                    if (nums.length >= 8) {
+                        const metrics = nums.slice(-8);
+                        q = metrics[0]; amt = metrics[1];
+                        cQ = metrics[2]; cAmt = metrics[3];
+                        bQ = metrics[4]; bAmt = metrics[5];
+                        balQ = metrics[6]; balAmt = metrics[7];
+                    } else {
+                        if (nums.length > 0) q = nums[0];
+                        if (nums.length > 1) amt = nums[1];
+                        if (nums.length > 2) cQ = nums[2];
+                        if (nums.length > 3) cAmt = nums[3];
+                        if (nums.length > 4) bQ = nums[4];
+                        if (nums.length > 5) bAmt = nums[5];
+                        if (nums.length > 6) balQ = nums[6];
+                        if (nums.length > 7) balAmt = nums[7];
+                    }
+
+                    rawRecords.push({
+                        "Order Number": String(orderNo || "N/A"),
+                        "Order Date": formatDateToDDMMYYYY(orderDate || "N/A"),
+                        "Product": line || prodCode || "N/A",
+                        "Purpose": purpose || "N/A",
+                        "Delivery Date": formatDateToDDMMYYYY(deliveryDate || "N/A"),
+                        "Product Description": prodDesc || "N/A",
+                        "Quantity": q,
+                        "Amount": amt,
+                        "Challan Qty": cQ,
+                        "Challan Amount": cAmt,
+                        "Bill Qty": bQ,
+                        "Bill Amount": bAmt,
+                        "Balance Qty": balQ,
+                        "Balance Amount": balAmt,
+                        "Order type": type
+                    });
+                }
+            }
+
+            // Aggregate all sizes belonging to the same order
+            return aggregateOrderSizes(rawRecords);
+        }
+
+        async function processReports() {
+            if (!finishFile && !semiFinishFile) {
+                setMsg('Please select at least one Excel report file.', 'text-danger');
+                return;
+            }
+
+            setMsg('Processing files...', 'text-primary');
+            const btn = document.getElementById('btnFillReport');
+            btn.disabled = true;
+
+            try {
+                let finishRecs = [];
+                let semiRecs = [];
+
+                if (finishFile) {
+                    const rows = await readFileRows(finishFile);
+                    finishRecs = parseReport(rows, 'Finish');
+                }
+                if (semiFinishFile) {
+                    const rows = await readFileRows(semiFinishFile);
+                    semiRecs = parseReport(rows, 'Semi Finish');
+                }
+
+                combinedRecords = [...finishRecs, ...semiRecs];
+                filteredRecords = [...combinedRecords];
+
+                renderTable();
+                document.getElementById('resultsSection').classList.remove('d-none');
+                document.getElementById('btnReset').classList.remove('d-none');
+                document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+                setMsg(`Processed ${combinedRecords.length} orders (${finishRecs.length} Finish, ${semiRecs.length} Semi Finish).`, 'text-success');
+            } catch (err) {
+                console.error(err);
+                setMsg('Error reading Excel: ' + err.message, 'text-danger');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function applyFilters() {
+            const q = document.getElementById('searchInput').value.toLowerCase().trim();
+            const type = document.getElementById('filterType').value;
+
+            filteredRecords = combinedRecords.filter(r => {
+                if (type !== 'ALL' && r["Order type"] !== type) return false;
+                if (q) {
+                    const text = `${r["Order Number"]} ${r["Order Date"]} ${r["Product"]} ${r["Purpose"]} ${r["Product Description"]}`.toLowerCase();
+                    if (!text.includes(q)) return false;
+                }
+                return true;
+            });
+
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const tfoot = document.getElementById('tableFoot');
+            tbody.innerHTML = '';
+
+            document.getElementById('recordCountBadge').innerText = `${filteredRecords.length} of ${combinedRecords.length} orders`;
+
+            if (filteredRecords.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="15" class="text-center py-4 text-muted">No records to display</td></tr>`;
+                tfoot.innerHTML = '';
+                return;
+            }
+
+            const fmt = (n) => Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            let tQ = 0, tAmt = 0, tcQ = 0, tcAmt = 0, tbQ = 0, tbAmt = 0, tbalQ = 0, tbalAmt = 0;
+
+            filteredRecords.forEach(r => {
+                tQ += Number(r["Quantity"] || 0);
+                tAmt += Number(r["Amount"] || 0);
+                tcQ += Number(r["Challan Qty"] || 0);
+                tcAmt += Number(r["Challan Amount"] || 0);
+                tbQ += Number(r["Bill Qty"] || 0);
+                tbAmt += Number(r["Bill Amount"] || 0);
+                tbalQ += Number(r["Balance Qty"] || 0);
+                tbalAmt += Number(r["Balance Amount"] || 0);
+
+                const badge = r["Order type"] === 'Finish' ? '<span class="badge-finish">Finish</span>' : '<span class="badge-semi">Semi Finish</span>';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+          <td class="text-cell"><strong>${esc(r["Order Number"])}</strong></td>
+          <td>${esc(formatDateToDDMMYYYY(r["Order Date"]))}</td>
+          <td>${esc(r["Product"])}</td>
+          <td>${esc(r["Purpose"])}</td>
+          <td>${esc(formatDateToDDMMYYYY(r["Delivery Date"]))}</td>
+          <td>${esc(r["Product Description"])}</td>
+          <td class="num-col">${fmt(r["Quantity"])}</td>
+          <td class="num-col">${fmt(r["Amount"])}</td>
+          <td class="num-col">${fmt(r["Challan Qty"])}</td>
+          <td class="num-col">${fmt(r["Challan Amount"])}</td>
+          <td class="num-col">${fmt(r["Bill Qty"])}</td>
+          <td class="num-col">${fmt(r["Bill Amount"])}</td>
+          <td class="num-col">${fmt(r["Balance Qty"])}</td>
+          <td class="num-col text-danger">${fmt(r["Balance Amount"])}</td>
+          <td class="text-center">${badge}</td>
+        `;
+                tbody.appendChild(tr);
+            });
+
+            tfoot.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-end">Total:</td>
+          <td class="num-col">${fmt(tQ)}</td>
+          <td class="num-col">${fmt(tAmt)}</td>
+          <td class="num-col">${fmt(tcQ)}</td>
+          <td class="num-col">${fmt(tcAmt)}</td>
+          <td class="num-col">${fmt(tbQ)}</td>
+          <td class="num-col">${fmt(tbAmt)}</td>
+          <td class="num-col">${fmt(tbalQ)}</td>
+          <td class="num-col text-danger">${fmt(tbalAmt)}</td>
+          <td></td>
+        </tr>
+      `;
+        }
+
+        /**
+         * Exports combined clean data to Excel (.xlsx):
+         * - Order Number: Strict Text Format ('@', type 's') preserving leading zeros
+         * - Order Date & Delivery Date: Strict DD/MM/YYYY text format
+         */
+        function exportToExcel() {
+            if (!filteredRecords.length) return;
+
+            const headers = [
+                "Order Number", "Order Date", "Product", "Purpose", "Delivery Date",
+                "Product Description", "Quantity", "Amount", "Challan Qty",
+                "Challan Amount", "Bill Qty", "Bill Amount", "Balance Qty",
+                "Balance Amount", "Order type"
+            ];
+
+            const rows = filteredRecords.map(r => {
+                const obj = {};
+                headers.forEach(h => {
+                    if (h === "Order Number") {
+                        obj[h] = String(r[h] ?? '');
+                    } else if (h === "Order Date" || h === "Delivery Date") {
+                        obj[h] = formatDateToDDMMYYYY(r[h]);
+                    } else {
+                        obj[h] = r[h];
+                    }
+                });
+                return obj;
+            });
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(rows, { header: headers });
+
+            // Apply Excel cell formatting directly
+            if (ws['!ref']) {
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+                    // Column 0: Order Number -> Text Format ('@', type 's')
+                    const orderRef = XLSX.utils.encode_cell({ r: R, c: 0 });
+                    if (ws[orderRef]) {
+                        ws[orderRef].t = 's';
+                        ws[orderRef].v = String(ws[orderRef].v ?? '');
+                        ws[orderRef].z = '@';
+                    }
+
+                    // Column 1: Order Date -> DD/MM/YYYY
+                    const orderDateRef = XLSX.utils.encode_cell({ r: R, c: 1 });
+                    if (ws[orderDateRef]) {
+                        ws[orderDateRef].t = 's';
+                        ws[orderDateRef].v = formatDateToDDMMYYYY(ws[orderDateRef].v);
+                        ws[orderDateRef].z = '@';
+                    }
+
+                    // Column 4: Delivery Date -> DD/MM/YYYY
+                    const delivDateRef = XLSX.utils.encode_cell({ r: R, c: 4 });
+                    if (ws[delivDateRef]) {
+                        ws[delivDateRef].t = 's';
+                        ws[delivDateRef].v = formatDateToDDMMYYYY(ws[delivDateRef].v);
+                        ws[delivDateRef].z = '@';
+                    }
+                }
+            }
+
+            ws['!cols'] = headers.map(h => {
+                let max = h.length;
+                rows.forEach(r => {
+                    const len = String(r[h] ?? '').length;
+                    if (len > max) max = len;
+                });
+                return { wch: Math.min(max + 2, 45) };
+            });
+
+            XLSX.utils.book_append_sheet(wb, ws, "Combined Report");
+            XLSX.writeFile(wb, "Combined_Order_Report.xlsx");
+        }
+
+        function resetAll() {
+            removeFile('finish');
+            removeFile('semi');
+            combinedRecords = [];
+            filteredRecords = [];
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterType').value = 'ALL';
+            document.getElementById('resultsSection').classList.add('d-none');
+            document.getElementById('btnReset').classList.add('d-none');
+            setMsg('');
+        }
+
+        function setMsg(txt, cls = 'text-muted') {
+            const el = document.getElementById('alertMsg');
+            el.className = 'small ' + cls;
+            el.innerText = txt;
+        }
+
+        function esc(s) {
+            if (s === null || s === undefined) return '';
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+
+</html>
